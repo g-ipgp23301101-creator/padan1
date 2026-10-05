@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Padankan Maklumat Usahawan</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#07111f;color:#eef8ff;min-height:100vh;overflow:hidden}
+button{font:inherit}
+.app{min-height:100vh;padding:18px;position:relative;background:
+radial-gradient(circle at 20% 20%,#0b4560 0,transparent 28%),
+radial-gradient(circle at 80% 15%,#2b245c 0,transparent 25%),
+linear-gradient(135deg,#050b16,#09192b 55%,#06131f)}
+.grid{position:absolute;inset:0;opacity:.12;background-image:linear-gradient(#35d8ff 1px,transparent 1px),linear-gradient(90deg,#35d8ff 1px,transparent 1px);background-size:42px 42px;pointer-events:none}
+header{position:relative;display:flex;justify-content:space-between;gap:12px;align-items:center;max-width:1100px;margin:auto}
+h1{font-size:clamp(20px,4vw,38px);margin:0;color:#7eeaff;text-shadow:0 0 18px #16cbea}
+.sub{color:#9bb7c8;font-size:13px;margin-top:3px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.badge{border:1px solid #28647b;background:#091b2ccc;border-radius:14px;padding:8px 12px;font-size:13px}
+.badge b{color:#fff}
+.main{position:relative;max-width:1100px;margin:16px auto 0;display:grid;grid-template-columns:1fr 1.15fr;gap:14px;height:calc(100vh - 112px)}
+.panel{background:#071827d9;border:1px solid #1b5267;border-radius:22px;box-shadow:0 0 30px #02101c;overflow:hidden}
+.question{padding:20px}
+.label{font-size:12px;letter-spacing:2px;color:#63dfff}
+.q{font-size:clamp(22px,3vw,34px);font-weight:800;margin:8px 0 14px}
+.target{min-height:125px;border:1px dashed #38d9ff66;border-radius:18px;padding:16px;background:#0b2636aa}
+.target small{color:#80aabd}
+.target .answer{font-size:25px;font-weight:800;color:#f7d66c;margin-top:8px}
+.cards{position:relative;min-height:260px;flex:1;margin-top:12px;border-radius:18px;background:linear-gradient(180deg,#0a2334aa,#06111dbb);overflow:hidden}
+.card{position:absolute;width:min(235px,42%);min-height:72px;padding:13px;border:1px solid #3bdcff88;border-radius:16px;background:linear-gradient(135deg,#102f43ee,#0a1a2aee);box-shadow:0 0 20px #00bde733;cursor:grab;user-select:none;touch-action:none;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:750}
+.card:active{cursor:grabbing;transform:scale(1.04);border-color:#ffe27b;box-shadow:0 0 28px #ffd84d77}
+.card.selected{border-color:#ffe27b;box-shadow:0 0 32px #ffd84d88}
+.instructions{padding:14px 20px;color:#a9c4d2;font-size:13px}
+.actions{display:flex;gap:8px;padding:12px 20px 18px}
+button{border:1px solid #2c8ca7;background:#0b3144;color:#dffaff;border-radius:12px;padding:10px 14px;cursor:pointer}
+button.primary{background:linear-gradient(135deg,#0ba4c7,#1676a8);border-color:#5be8ff;font-weight:800}
+button:active{transform:scale(.98)}
+.overlay{position:fixed;inset:0;background:#020812dd;display:grid;place-items:center;padding:20px;z-index:10}
+.modal{max-width:560px;width:100%;padding:30px;border:1px solid #38dfff77;border-radius:24px;background:#081a2aee;text-align:center;box-shadow:0 0 60px #00bde733}
+.modal h2{font-size:34px;margin:0 0 8px;color:#7eeaff}
+.modal p{color:#abc4d0;line-height:1.55}
+.hidden{display:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:12px 18px;border-radius:14px;background:#092436f2;border:1px solid #3bdcff99;z-index:20;box-shadow:0 0 25px #00cfff44;font-weight:700}
+@media(max-width:760px){
+ body{overflow:auto}.app{min-height:100vh}.main{height:auto;grid-template-columns:1fr}
+ .panel{min-height:320px}.cards{min-height:300px}
+ header{align-items:flex-start}.hud{max-width:48%}
+ .card{width:43%;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="grid"></div>
+<header>
+  <div><h1>🚀 MISI USAHAWAN BERWAWASAN</h1><div class="sub">PADANKAN MAKLUMAT USAHAWAN • MODE INTERAKTIF</div></div>
+  <div class="hud">
+    <div class="badge">SKOR <b id="score">0</b></div>
+    <div class="badge">MISI <b id="progress">1/6</b></div>
+    <div class="badge">TEPAT <b id="accuracy">100%</b></div>
+  </div>
+</header>
+
+<div class="main">
+<section class="panel">
+  <div class="question">
+    <div class="label">DATA TARGET</div>
+    <div class="q" id="question">Siapakah usahawan tersebut?</div>
+    <div class="target" id="target"><small>LEPASKAN / TAP JAWAPAN DI SINI</small><div class="answer" id="answer">—</div></div>
+  </div>
+  <div class="instructions">🖐️ <b>Sentuh dan seret</b> kad ke sasaran. Pada iPad, kad boleh terus digunakan dengan sentuhan.</div>
+  <div class="actions"><button class="primary" id="reset">↻ Mula Semula</button></div>
+</section>
+
+<section class="panel" style="padding:12px">
+  <div class="label" style="padding:8px">KAD MAKLUMAT HOLOGRAM</div>
+  <div class="cards" id="cards"></div>
+</section>
+</div>
+</div>
+
+<div class="overlay" id="start">
+ <div class="modal">
+  <h2>✦ PADANKAN MAKLUMAT USAHAWAN</h2>
+  <p>Padankan kad maklumat dengan soalan yang betul. Gunakan jari untuk menyeret kad atau ketik kad pada iPad.</p>
+  <button class="primary" id="startBtn">▶ MULA MISI</button>
+ </div>
+</div>
+
+<div class="overlay hidden" id="end">
+ <div class="modal">
+  <h2>🎉 MISI SELESAI!</h2>
+  <p id="result"></p>
+  <button class="primary" id="again">↻ MAIN SEMULA</button>
+ </div>
+</div>
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const missions=[
+ {q:"Siapakah usahawan tersebut?",a:"Aiman",opts:["Aiman","Hakim","Amir"]},
+ {q:"Apakah jenis perniagaan yang dijalankan?",a:"Perniagaan makanan",opts:["Perniagaan makanan","Perniagaan pakaian","Perniagaan alat tulis"]},
+ {q:"Apakah produk yang dihasilkan?",a:"Kerepek pisang",opts:["Kerepek pisang","Kek coklat","Jus buah"]},
+ {q:"Bagaimanakah usahawan memulakan perniagaan?",a:"Bermula dari rumah",opts:["Bermula dari rumah","Menyewa kedai besar","Membuka kilang"]},
+ {q:"Apakah ciri yang ditunjukkan oleh usahawan?",a:"Rajin dan tidak berputus asa",opts:["Rajin dan tidak berputus asa","Mudah berputus asa","Tidak bertanggungjawab"]},
+ {q:"Apakah usaha yang dilakukan untuk mengembangkan perniagaan?",a:"Mempromosikan melalui media sosial",opts:["Mempromosikan melalui media sosial","Menutup perniagaan","Mengurangkan kualiti produk"]}
+];
+let idx=0,score=0,correct=0,wrong=0,started=false,drag=null;
+
+const $=id=>document.getElementById(id);
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function render(){
+ if(idx>=missions.length){finish();return}
+ $("question").textContent=missions[idx].q;
+ $("progress").textContent=(idx+1)+"/"+missions.length;
+ $("answer").textContent="—";
+ const box=$("cards");box.innerHTML="";
+ const rect=box.getBoundingClientRect();
+ shuffle(missions[idx].opts).forEach((text,i)=>{
+   const el=document.createElement("div");el.className="card";el.textContent=text;el.dataset.value=text;
+   el.style.left=(8+(i%2)*45)+"%";el.style.top=(10+Math.floor(i/2)*28)+"%";
+   addDrag(el);box.appendChild(el);
+ });
+}
+function toast(msg,good=true){
+ const t=$("toast");t.textContent=msg;t.style.borderColor=good?"#45e6a1":"#ff6b75";t.classList.remove("hidden");
+ setTimeout(()=>t.classList.add("hidden"),900);
+}
+function answer(value){
+ if(!started)return;
+ if(value===missions[idx].a){
+   score+=10;correct++;$("score").textContent=score;$("accuracy").textContent=Math.round(correct/(correct+wrong)*100)+"%";
+   $("answer").textContent=value;toast("✓ PADANAN BETUL! +10",true);
+   setTimeout(()=>{idx++;render()},650);
+ }else{
+   score=Math.max(0,score-3);wrong++;$("score").textContent=score;$("accuracy").textContent=Math.round(correct/(correct+wrong)*100)+"%";
+   toast("✕ Cuba lagi! -3",false);
+ }
+}
+function addDrag(el){
+ let sx=0,sy=0,ox=0,oy=0,moving=false;
+ el.addEventListener("pointerdown",e=>{
+   e.preventDefault();moving=true;el.setPointerCapture(e.pointerId);
+   const r=el.getBoundingClientRect(),p=$("cards").getBoundingClientRect();
+   sx=e.clientX;sy=e.clientY;ox=r.left-p.left;oy=r.top-p.top;el.classList.add("selected");
+ });
+ el.addEventListener("pointermove",e=>{
+   if(!moving)return;
+   const p=$("cards").getBoundingClientRect();
+   el.style.left=Math.max(0,Math.min(p.width-el.offsetWidth,ox+e.clientX-sx))+"px";
+   el.style.top=Math.max(0,Math.min(p.height-el.offsetHeight,oy+e.clientY-sy))+"px";
+ });
+ el.addEventListener("pointerup",e=>{
+   if(!moving)return;moving=false;el.classList.remove("selected");
+   const tr=$("target").getBoundingClientRect(),r=el.getBoundingClientRect();
+   const cx=r.left+r.width/2,cy=r.top+r.height/2;
+   if(cx>=tr.left&&cx<=tr.right&&cy>=tr.top&&cy<=tr.bottom) answer(el.dataset.value);
+   else if(Math.abs(e.clientX-sx)<10&&Math.abs(e.clientY-sy)<10) answer(el.dataset.value);
+ });
+}
+function finish(){
+ $("progress").textContent="6/6";$("result").innerHTML=`Skor akhir: <b>${score}</b><br>Jawapan betul: <b>${correct}/6</b><br>Ketepatan: <b>${correct/(missions.length)*100}%</b>`;
+ $("end").classList.remove("hidden");
+}
+function startGame(){started=true;idx=0;score=0;correct=0;wrong=0;$("score").textContent=0;$("accuracy").textContent="100%";$("start").classList.add("hidden");render()}
+$("startBtn").onclick=startGame;
+$("again").onclick=()=>{$("end").classList.add("hidden");startGame()};
+$("reset").onclick=()=>{if(started){idx=0;score=0;correct=0;wrong=0;$("score").textContent=0;$("accuracy").textContent="100%";render()}};
+</script>
+</body>
+</html>
